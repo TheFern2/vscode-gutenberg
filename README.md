@@ -2,8 +2,6 @@
 
 This extension aims to bridge the gap between technical writers of markup languages such as markdown, and eventually a few other light weight markups extensions. The goal is to take a bunch of files, and print them sequentially into a book pdf, doc, or html.
 
-For printing a single markdown file use this extension https://github.com/dfinke/vscode-pandoc
-
 ## Features
 
 Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
