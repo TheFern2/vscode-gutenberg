@@ -10,7 +10,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-gutenberg.printBook"
+		"onCommand:vscode-gutenberg.printBook",
+		"onCommand:vscode-gutenberg.printSingle"
 	],
 	"main": "./extension.js",
 	"contributes": {
@@ -18,6 +19,10 @@
 			{
 				"command": "vscode-gutenberg.printBook",
 				"title": "gutenberg: Print Book"
+			},
+			{
+				"command": "vscode-gutenberg.printSingle",
+				"title": "gutenberg: Print Single"
 			}
 		],
 		"configuration": {

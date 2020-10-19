@@ -95,7 +95,39 @@ function activate(context) {
 		console.log('End of function')
 	});
 
+	let disposable2 = vscode.commands.registerCommand('vscode-gutenberg.printSingle', function () {
+		console.log('Print a single file')
+		const rootfolders = vscode.workspace.workspaceFolders
+		rootPathFull = rootfolders[0].uri.path
+
+		const editor = vscode.window.activeTextEditor
+		const fullPath = path.normalize(editor.document.fileName)
+		const filePath = path.dirname(fullPath)
+		const folderName = path.basename(filePath)
+		const fileName = path.basename(fullPath)
+		const fileNameNoExtension = path.basename(fullPath, '.md')
+
+		console.log(fullPath)
+
+		const pandocCmdTest = `cd ${rootPathFull} && pandoc -o ./${folderName}/${fileNameNoExtension}.pdf --pdf-engine=xelatex ./${folderName}/${fileName}`
+
+		exec(pandocCmdTest, (error, stdout, stderr) => {
+			if (error) {
+				console.log(`error: ${error.message}`);
+				return;
+			}
+			if (stderr) {
+				console.log(`stderr: ${stderr}`);
+				return;
+			}
+			console.log(`stdout: ${stdout}`);
+		});
+
+		console.log('End of function')
+	})
+
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(disposable2);
 }
 exports.activate = activate;
 
