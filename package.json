@@ -1,7 +1,7 @@
 {
 	"name": "vscode-gutenberg",
-	"displayName": "vscode-gutenberg",
-	"description": "",
+	"displayName": "Gutenberg",
+	"description": "Print a markdown book to pdf, doc, or html",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.50.0"
@@ -10,16 +10,48 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-gutenberg.helloWorld"
+		"onCommand:vscode-gutenberg.printBook"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "vscode-gutenberg.helloWorld",
-				"title": "Hello World"
+				"command": "vscode-gutenberg.printBook",
+				"title": "gutenberg: Print Book"
 			}
-		]
+		],
+		"configuration": {
+			"title": "Gutenberg",
+			"properties": {
+				"gutenberg.useFolders": {
+					"type":"boolean",
+					"default": true,
+					"description": "Whether vscode workspace is using folders for chapters"
+				},
+				"gutenberg.useDifferentRootPath": {
+					"type":"string",
+					"default": "",
+					"description": "By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used"
+				},
+				"gutenberg.inputExtension": {
+					"type":"string",
+					"default": "md",
+					"description": "Input files extension"
+				},
+				"gutenberg.outputExtension": {
+					"type":"string",
+					"default": "pdf",
+					"description": "Output file extension"
+				},
+				"gutenberg.ignoreFoldersOrFiles": {
+					"type":"array",
+					"default": [
+						"images"
+					],
+					"description": "Folders or Files to be ignored from the book print"
+				}
+			}
+		}
 	},
 	"scripts": {
 		"lint": "eslint .",
