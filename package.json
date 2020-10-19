@@ -1,6 +1,6 @@
 {
-	"name": "vscode-markdown-pandoc",
-	"displayName": "vscode-markdown-pandoc",
+	"name": "vscode-gutenberg",
+	"displayName": "vscode-gutenberg",
 	"description": "",
 	"version": "0.0.1",
 	"engines": {
@@ -10,13 +10,13 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-markdown-pandoc.helloWorld"
+		"onCommand:vscode-gutenberg.helloWorld"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "vscode-markdown-pandoc.helloWorld",
+				"command": "vscode-gutenberg.helloWorld",
 				"title": "Hello World"
 			}
 		]

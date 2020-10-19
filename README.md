@@ -1,6 +1,6 @@
-# vscode-markdown-pandoc README
+# vscode-gutenberg README
 
-This is the README for your extension "vscode-markdown-pandoc". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "vscode-gutenberg". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
