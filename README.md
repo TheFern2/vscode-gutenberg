@@ -1,6 +1,6 @@
-# vscode-gutenberg README
+# vscode-gutenberg
 
-This is the README for your extension "vscode-gutenberg". After writing up a brief description, we recommend including the following sections.
+This extension aims to bridge the gap between technical writers of markup languages such as markdown, and eventually a few other light weight markups extensions. The goal is to take a bunch of files, and print them sequentially into a pdf, doc, or html.
 
 ## Features
 
@@ -14,7 +14,18 @@ For example if there is an image subfolder under your extension project workspac
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Follow your operating system install instructions.
+
+- Pandoc  https://pandoc.org/installing.html
+- LaTeX (I tested with MiKTeX) https://miktex.org/download
+
+Before you attempt to use this extension, do a minimal test to ensure you can use pandoc to print to your desired output. If that works, then you are good to go. If it didn't work please look on Stack Overflow or google for assistance, gutenberg needs those two dependencies.
+
+```
+pandoc -o book.pdf -pdf-engine=xelatex someFile.md
+```
+
+> NB: The first time you print a pdf, you'll get popups for installing MiKTeX packages.
 
 ## Extension Settings
 
