@@ -19,7 +19,7 @@
 		"markdown",
 		"pandoc",
 		"latex"
-    ],
+	],
 	"engines": {
 		"vscode": "^1.50.0"
 	},
@@ -46,27 +46,25 @@
 			"title": "Gutenberg",
 			"properties": {
 				"gutenberg.useDifferentRootPath": {
-					"type":"string",
+					"type": "string",
 					"default": "",
 					"description": "By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used"
 				},
 				"gutenberg.outputExtension": {
-					"type":"string",
+					"type": "string",
 					"default": "pdf",
 					"description": "Output file extension"
 				},
 				"gutenberg.ignoreRootPathFolders": {
-					"type":"array",
+					"type": "array",
 					"default": [
 						"images"
 					],
 					"description": "Root path folders ignored from the book print"
 				},
 				"gutenberg.ignoreFiles": {
-					"type":"array",
-					"default": [
-						
-					],
+					"type": "array",
+					"default": [],
 					"description": "Files to be ignored from the book print"
 				}
 			}

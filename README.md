@@ -29,7 +29,7 @@ pandoc someFile.md -o book.doc
 pandoc someFile.md -o book.html
 ```
 
-> NB: The first time you use pandoc, you'll get popups for installing MiKTeX packages.
+> NB: The first time you use pandoc, you'll get popups for installing MiKTeX packages, or you can choose in settings to install on the fly without popups. Also the first time you convert a document it takes a while, the next time will be fast as all the packages are already downloaded.
 
 ## Extension Settings
 

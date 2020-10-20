@@ -3,6 +3,7 @@
 const vscode = require('vscode');
 const path = require('path');
 const { exec } = require("child_process");
+const process = require("process")
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -41,7 +42,7 @@ function activate(context) {
 		// Support for only one workspace opened or rootPath set in config
 		if(rootfolders.length === 1 && rootFolderOption === ""){
 			//rootPathUri = rootfolders[0].uri
-			rootPathFull = rootfolders[0].uri.path
+			rootPathFull = rootfolders[0].uri.fsPath
 			console.log(`Root path found: ${rootfolders[0].name}`)
 		}
 
@@ -62,15 +63,25 @@ function activate(context) {
 		let filesArray = []
 		let filesString = ''
 		bookFilesResponse.forEach(element => {
-			element.files.forEach(file => {
-				if(element.isFolder){
-					filesArray.push(`./${element.folderPath}/${file}`)
+			element.files.forEach(file => {	
+
+				if(process.platform === "win32"){
+					if(element.isFolder){
+						filesArray.push(`${rootPathFull}\\${element.folderPath}\\${file}`)
+					} else {
+						filesArray.push(`${rootPathFull}\\${file}`)
+					}
 				} else {
-					filesArray.push(`./${file}`)
-				}
-				
+					if(element.isFolder){
+						filesArray.push(`./${element.folderPath}/${file}`)
+					} else {
+						filesArray.push(`./${file}`)
+					}
+				}			
 			});
 		});
+
+		console.log(process.platform)
 
 		if(filesArray.length > 0){
 			vscode.window.showInformationMessage('Files names have been collected');
@@ -80,6 +91,7 @@ function activate(context) {
 			return
 		}		
 
+		let pandocCmdTest = `cd ${rootPathFull} && dir`
 		let pandocCmd = `cd ${rootPathFull} && pandoc -o book.pdf --pdf-engine=xelatex ${filesString}`
 		if(outputExtensionOption !== "pdf"){		
 			pandocCmd = `cd ${rootPathFull} && pandoc -o book.${outputExtensionOption} ${filesString}`
@@ -113,7 +125,7 @@ function activate(context) {
 		if(rootFolderOption){
 			rootPathFull = rootFolderOption
 		} else {
-			rootPathFull = rootfolders[0].uri.path
+			rootPathFull = rootfolders[0].uri.fsPath
 		}		
 
 		let fullPath = ''
