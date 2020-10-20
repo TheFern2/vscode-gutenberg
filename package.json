@@ -2,7 +2,24 @@
 	"name": "vscode-gutenberg",
 	"displayName": "Gutenberg",
 	"description": "Print a markdown book to pdf, doc, or html",
-	"version": "0.0.1",
+	"version": "1.0.0",
+	"publisher": "TheFern",
+	"icon": "images/printed.png",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/TheFern2/vscode-gutenberg/issues",
+		"email": "fernandobe+git@protonmail.com"
+	},
+	"homepage": "https://github.com/TheFern2/vscode-gutenberg",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/TheFern2/vscode-gutenberg.git"
+	},
+	"keywords": [
+		"markdown",
+		"pandoc",
+		"latex"
+    ],
 	"engines": {
 		"vscode": "^1.50.0"
 	},
@@ -28,32 +45,29 @@
 		"configuration": {
 			"title": "Gutenberg",
 			"properties": {
-				"gutenberg.useFolders": {
-					"type":"boolean",
-					"default": true,
-					"description": "Whether vscode workspace is using folders for chapters"
-				},
 				"gutenberg.useDifferentRootPath": {
 					"type":"string",
 					"default": "",
 					"description": "By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used"
-				},
-				"gutenberg.inputExtension": {
-					"type":"string",
-					"default": "md",
-					"description": "Input files extension"
 				},
 				"gutenberg.outputExtension": {
 					"type":"string",
 					"default": "pdf",
 					"description": "Output file extension"
 				},
-				"gutenberg.ignoreFoldersOrFiles": {
+				"gutenberg.ignoreRootPathFolders": {
 					"type":"array",
 					"default": [
 						"images"
 					],
-					"description": "Folders or Files to be ignored from the book print"
+					"description": "Root path folders ignored from the book print"
+				},
+				"gutenberg.ignoreFiles": {
+					"type":"array",
+					"default": [
+						
+					],
+					"description": "Files to be ignored from the book print"
 				}
 			}
 		}

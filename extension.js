@@ -16,6 +16,14 @@ function activate(context) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "vscode-gutenberg" is now active!');
 
+	var gutenbergOutputChannel = vscode.window.createOutputChannel('Gutenberg')
+
+	// Options
+	rootFolderOption = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath');
+	ignoreRootFoldersOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders');
+	ignoreFilesOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles');
+	outputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -27,31 +35,26 @@ function activate(context) {
 		const rootfolders = vscode.workspace.workspaceFolders
 		console.log(rootfolders)
 
-		let rootPathUri = ''
+		//let rootPathUri = ''
 		let rootPathFull = ''
 
-		// TODO figure out how to handle multiple folder workspaces
-		// TODO if there is one workspace then handle folders as chapters
-		// TODO unless bookRootPath has been set in configuration
-		if(rootfolders.length > 1){
-			rootfolders.forEach(element => {
-				console.log(element.name)
-				if(element.name == "book"){
-					rootPathUri = element.uri
-					rootPathFull = element.uri.path
-					console.log(`Root path found: ${element.name}`)
-				}
-			});
-		} else {
-			rootPathUri = rootfolders[0].uri
+		// Support for only one workspace opened or rootPath set in config
+		if(rootfolders.length === 1 && rootFolderOption === ""){
+			//rootPathUri = rootfolders[0].uri
 			rootPathFull = rootfolders[0].uri.path
-			console.log(`Root path found: ${rootfolders[0].name}`) // rootPathFull can also be an option
-		}		
+			console.log(`Root path found: ${rootfolders[0].name}`)
+		}
+
+		if(rootFolderOption){
+			rootPathFull = rootFolderOption
+			console.log(`Root path found: ${rootFolderOption}`)
+		}
 	
 		// ignore folders need to be part of configuration
-		const ignoreFolders = ['images']
+		const ignoreFolders = ignoreRootFoldersOption
+		const ignoreFiles = ignoreFilesOption
 		
-		const bookFoldersPromise = getBookFiles(rootPathFull, ignoreFolders, '.md')		
+		const bookFoldersPromise = getBookFiles(rootPathFull, ignoreFolders, ignoreFiles, '.md')		
 		const bookFilesResponse = await Promise.resolve(bookFoldersPromise)
 		console.log(bookFilesResponse)		
 		
@@ -77,19 +80,27 @@ function activate(context) {
 			return
 		}		
 
-		// const lsCmdTest = `cd ${rootPathFull} && ls -la`
-		const pandocCmdTest = `cd ${rootPathFull} && pandoc -o book.pdf --pdf-engine=xelatex ${filesString}`
+		let pandocCmd = `cd ${rootPathFull} && pandoc -o book.pdf --pdf-engine=xelatex ${filesString}`
+		if(outputExtensionOption !== "pdf"){		
+			pandocCmd = `cd ${rootPathFull} && pandoc -o book.${outputExtensionOption} ${filesString}`
+		}
 
-		exec(pandocCmdTest, (error, stdout, stderr) => {
-			if (error) {
+		exec(pandocCmd, (error, stdout, stderr) => {
+			if (error !== null) {
 				console.log(`error: ${error.message}`);
-				return;
+				gutenbergOutputChannel.append(`error: ${error.message}\n`)
 			}
-			if (stderr) {
+			if (stderr !== null && stderr !== "") {
 				console.log(`stderr: ${stderr}`);
-				return;
+				vscode.window.showErrorMessage('stderr: ' + stderr.toString());
+				gutenbergOutputChannel.append(`stderr: ${stderr}\n`)
+				
 			}
-			console.log(`stdout: ${stdout}`);
+			if (stdout !== null){
+				console.log(`stdout: ${stdout}`);
+				gutenbergOutputChannel.append(`stdout: ${stdout}\n`)
+			}
+			
 		});
 
 		console.log('End of function')
@@ -98,10 +109,32 @@ function activate(context) {
 	let disposable2 = vscode.commands.registerCommand('vscode-gutenberg.printSingle', function () {
 		console.log('Print a single file')
 		const rootfolders = vscode.workspace.workspaceFolders
-		rootPathFull = rootfolders[0].uri.path
 
+		if(rootFolderOption){
+			rootPathFull = rootFolderOption
+		} else {
+			rootPathFull = rootfolders[0].uri.path
+		}		
+
+		let fullPath = ''
 		const editor = vscode.window.activeTextEditor
-		const fullPath = path.normalize(editor.document.fileName)
+
+		// Sanity Checks for active editor, or lack of...
+		if(editor){
+			fullPath = path.normalize(editor.document.fileName)
+		}
+		if(editor === undefined){
+			gutenbergOutputChannel.append(`No file is currently active\n`)
+			vscode.window.showErrorMessage('No file is currently active');
+			return
+		}		
+
+		if(!fullPath.includes('md')){
+			gutenbergOutputChannel.append(`File active is not markdown\n`)
+			vscode.window.showErrorMessage('File active is not markdown');
+			return
+		}		
+
 		const filePath = path.dirname(fullPath)
 		const folderName = path.basename(filePath)
 		const fileName = path.basename(fullPath)
@@ -109,18 +142,27 @@ function activate(context) {
 
 		console.log(fullPath)
 
-		const pandocCmdTest = `cd ${rootPathFull} && pandoc -o ./${folderName}/${fileNameNoExtension}.pdf --pdf-engine=xelatex ./${folderName}/${fileName}`
+		let pandocCmd = `cd ${rootPathFull} && pandoc -o ${filePath}/${fileNameNoExtension}.pdf --pdf-engine=xelatex ${filePath}/${fileName}`
+		if(outputExtensionOption !== "pdf"){		
+			pandocCmd = `cd ${rootPathFull} && pandoc -o ${filePath}/${fileNameNoExtension}.${outputExtensionOption} ${filePath}/${fileName}`
+		}
 
-		exec(pandocCmdTest, (error, stdout, stderr) => {
-			if (error) {
+		exec(pandocCmd, (error, stdout, stderr) => {
+			if (error !== null) {
 				console.log(`error: ${error.message}`);
-				return;
+				gutenbergOutputChannel.append(`error: ${error.message}\n`)
 			}
-			if (stderr) {
+			if (stderr !== null && stderr !== "") {
 				console.log(`stderr: ${stderr}`);
-				return;
+				vscode.window.showErrorMessage('stderr: ' + stderr.toString());
+				gutenbergOutputChannel.append(`stderr: ${stderr}\n`)
+				
 			}
-			console.log(`stdout: ${stdout}`);
+			if (stdout !== null){
+				console.log(`stdout: ${stdout}`);
+				gutenbergOutputChannel.append(`stdout: ${stdout}\n`)
+			}
+			
 		});
 
 		console.log('End of function')
@@ -139,7 +181,7 @@ module.exports = {
 	deactivate
 }
 
-async function getBookFiles(rootPath, ignoreFolders, fileExtension){
+async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension){
 
 	let bookFoldersPromise = await Promise.resolve(vscode.workspace.fs.readDirectory( vscode.Uri.file(rootPath)))
 	let bookFoldersPaths = []
@@ -147,12 +189,12 @@ async function getBookFiles(rootPath, ignoreFolders, fileExtension){
 	let bookFilesOnRoot = []
 
 	bookPaths.forEach(value => {
-		// only add folder paths here
+		// add folder paths here
 		if(value[1] == 2 && !ignoreFolders.includes(value[0])){
 			bookFoldersPaths.push(value[0])
 		}
 		// add files on root, in case they need to be used later
-		if(value[1] == 1 && !ignoreFolders.includes(value[0])){
+		if(value[1] == 1){
 			bookFilesOnRoot.push(value[0])
 		}
 	})
@@ -177,19 +219,15 @@ async function getBookFiles(rootPath, ignoreFolders, fileExtension){
 			// only add files to tempFiles
 			const tempFiles = []
 			bookFilesResponse[i].forEach(element => {
-				if(element[1] == 1 && element[0].includes(fileExtension)){
+				if(element[1] == 1 && element[0].includes(fileExtension) && !ignoreFiles.includes(element[0])){
 					tempFiles.push(element[0])
 				}
 				if(element[1] == 2){
 					vscode.window.showInformationMessage(`Directory ${basePath} should not have nested folders`);
 				}
-				if(element[1] == 1 && !element[0].includes(fileExtension)){
+				if(element[1] == 1 && !element[0].includes(fileExtension) && !ignoreFiles.includes(element[0])){
 					vscode.window.showInformationMessage(`Directory ${basePath} should only have ${fileExtension} files, ${element[0]} is not acceptable`);
 				}
-				//  else{
-				// 	// TODO error needs to be cleared on what to remove!
-				// 	vscode.window.showErrorMessage(`Directory ${basePath} should only have ${fileExtension} files, not folders or other file extensions`);
-				// }
 			});
 			
 			bookFiles.push({
@@ -200,16 +238,13 @@ async function getBookFiles(rootPath, ignoreFolders, fileExtension){
 		}
 	} else {
 		// Do only files as no folder paths were found
-		// only add files to tempFiles
-		
+		// only add files to tempFiles		
 		bookFilesOnRoot.forEach(element => {
 			const tempFiles = []
-			if(element.includes(fileExtension)){
-				tempFiles.push(element)
-				
-			} else{
-				// TODO error needs to be cleared on what to remove!
-				vscode.window.showInformationMessage(`Files should only have ${fileExtension} extension, ${element} is not acceptable`);
+			if(element.includes(fileExtension) && !ignoreFiles.includes(element)){
+				tempFiles.push(element)				
+			} else if(!element.includes(fileExtension) && !ignoreFiles.includes(element)){
+				vscode.window.showInformationMessage(`Files should only have ${fileExtension} extension, ${element} is not acceptable, add to ignoreFiles setting`);
 			}
 
 			if(tempFiles.length > 0){
