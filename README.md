@@ -35,7 +35,10 @@ pandoc someFile.md -o book.html
 
 This extension contributes the following settings:
 
+* `gutenberg.defaultPandocCommand`: Default pandoc command, and output file name. Use this if you need to include a template, or other command flag
+* `gutenberg.defaultPdfEngine`: Default pdf engine
 * `gutenberg.useDifferentRootPath`: By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used
+* `gutenberg.inputExtension`: Input file extension, if you're using something other than md
 * `gutenberg.outputExtension`: Output file extension
 * `gutenberg.ignoreRootPathFolders`: Root path folders ignored from the book print
 * `gutenberg.ignoreFiles`: Files to be ignored from the book print
