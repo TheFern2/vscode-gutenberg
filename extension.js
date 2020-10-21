@@ -4,6 +4,7 @@ const vscode = require('vscode');
 const path = require('path');
 const { exec } = require("child_process");
 const process = require("process")
+const fs = require('fs-extra')
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,13 +21,16 @@ function activate(context) {
 	var gutenbergOutputChannel = vscode.window.createOutputChannel('Gutenberg')
 
 	// Options
-	defaultPandocCommandOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPandocCommand');
+	pandocCmdArgsOption = vscode.workspace.getConfiguration('gutenberg').get('pandocCmdArgs');
+	pandocCommandExtraOption = vscode.workspace.getConfiguration('gutenberg').get('pandocCommandExtra');
 	defaultPdfEngineOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPdfEngine');
 	rootFolderOption = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath');
 	ignoreRootFoldersOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders');
 	ignoreFilesOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles');
 	inputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('inputExtension');
 	outputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
+
+	console.log(pandocCmdArgsOption)
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -88,14 +92,26 @@ function activate(context) {
 		} else {
 			vscode.window.showErrorMessage('No files found!');
 			return
-		}		
+		}
+		
+		// Ensure output folder exists
+		const outputFolderExists = await fs.pathExists(`${rootPathFull}/${pandocCmdArgsOption.outputFolder}`)
+		if(!outputFolderExists){
+			try {
+				await fs.ensureDir(`${rootPathFull}/${pandocCmdArgsOption.outputFolder}`)
+				console.log('success!')
+			  } catch (err) {
+				console.error(err)
+				vscode.window.showErrorMessage(err);
+			  }
+		}
 
 		let pandocCmdTest = `cd "${rootPathFull}" && ls`
 		let pandocCmd = ''
 		if(outputExtensionOption !== "pdf"){		
-			pandocCmd = `cd "${rootPathFull}" && ${defaultPandocCommandOption}.${outputExtensionOption} ${filesString}`
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} ${filesString} ${pandocCommandExtraOption}`
 		} else {
-			pandocCmd = `cd "${rootPathFull}" && ${defaultPandocCommandOption}.${outputExtensionOption} --pdf-engine=${defaultPdfEngineOption} ${filesString}`
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} --pdf-engine=${pandocCmdArgsOption.pdfEngine} ${filesString} ${pandocCommandExtraOption}`
 		}
 
 		exec(pandocCmd, (error, stdout, stderr) => {

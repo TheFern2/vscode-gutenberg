@@ -2,7 +2,7 @@
 	"name": "vscode-gutenberg",
 	"displayName": "Gutenberg",
 	"description": "Print a markdown book to pdf, doc, or html",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"publisher": "TheFern",
 	"icon": "images/printed.png",
 	"license": "MIT",
@@ -45,15 +45,19 @@
 		"configuration": {
 			"title": "Gutenberg",
 			"properties": {
-				"gutenberg.defaultPandocCommand": {
-					"type": "string",
-					"default": "pandoc -o ./output/book",
-					"description": "Default Pandoc Command for advanced users, the book extension comes from outputExtension"
+				"gutenberg.pandocCmdArgs": {
+					"type": "object",
+					"default": {
+						"outputFolder": "output",
+						"bookName": "book",
+						"pdfEngine": "xelatex"
+					},
+					"description": "Pandoc cmd line options"
 				},
-				"gutenberg.defaultPdfEngine": {
+				"gutenberg.pandocCommandExtra": {
 					"type": "string",
-					"default": "xelatex",
-					"description": "Default pdf engine"
+					"default": "",
+					"description": "If any extra flags are needed, they go here, i.e. template, toc, etc."
 				},
 				"gutenberg.useDifferentRootPath": {
 					"type": "string",
@@ -101,5 +105,8 @@
 		"mocha": "^8.1.3",
 		"typescript": "^4.0.2",
 		"vscode-test": "^1.4.0"
+	},
+	"dependencies": {
+		"fs-extra": "^9.0.1"
 	}
 }

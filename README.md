@@ -31,17 +31,43 @@ pandoc someFile.md -o book.html
 
 > NB: The first time you use pandoc, you'll get popups for installing MiKTeX packages, or you can choose in settings to install on the fly without popups. Also the first time you convert a document it takes a while, the next time will be fast as all the packages are already downloaded.
 
+## Book Structure
+
+There are two ways you can structure your book. If you're like me chances are you want some folder structure, keeping in mind, that there should be no nesting within those folders, basically from root folder you can have one nested level of folders or chapters. I thought about gathering files recursively, but that would complicate things a bit with ordering while is certainly doable, I think it isn't worth the trouble for now.
+
+Folder structured book:
+```
+├── book
+│   ├── Chapter1
+│   │   ├── Scene1.md
+│   │   └── Scene2.md
+│   └── Chapter2
+│       └── Scene1.md
+├── images
+│   └── lostbook.jpg
+```
+
+Files in root path:
+```
+├── book_2
+│   ├── Scene1.md
+│   ├── Scene2.md
+│   └── Scene3.md
+├── images
+│   └── lostbook.jpg
+```
+
 ## Extension Settings
 
 This extension contributes the following settings:
 
-* `gutenberg.defaultPandocCommand`: Default pandoc command, and output file name. Use this if you need to include a template, or other command flag
-* `gutenberg.defaultPdfEngine`: Default pdf engine
-* `gutenberg.useDifferentRootPath`: By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used
-* `gutenberg.inputExtension`: Input file extension, if you're using something other than md
-* `gutenberg.outputExtension`: Output file extension
-* `gutenberg.ignoreRootPathFolders`: Root path folders ignored from the book print
-* `gutenberg.ignoreFiles`: Files to be ignored from the book print
+* `gutenberg.pandocCmdArgs`: Variables that are passed to the default pandoc command.
+* `gutenberg.pandocCommandExtra`: If any extra flags are needed, they go here, i.e. --template=, --toc, etc.
+* `gutenberg.useDifferentRootPath`: By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used.
+* `gutenberg.inputExtension`: Input file extension, if you're using something other than md.
+* `gutenberg.outputExtension`: Output file extension.
+* `gutenberg.ignoreRootPathFolders`: Root path folders ignored from the book print.
+* `gutenberg.ignoreFiles`: Files to be ignored from the book print.
 
 ### ignoreRootPathFolders
 
@@ -59,11 +85,11 @@ None
 
 Users appreciate release notes as you update your extension.
 
-### 1.0.0
+### 1.0.1
 
-Initial release of gutenberg:
-- Print a book
-- Print a single file
+Bug Fixes:
+- Fixed issue with spaces in path
+- Added cmd arguments to configuration
 
 ## Credits
 
