@@ -20,9 +20,12 @@ function activate(context) {
 	var gutenbergOutputChannel = vscode.window.createOutputChannel('Gutenberg')
 
 	// Options
+	defaultPandocCommandOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPandocCommand');
+	defaultPdfEngineOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPdfEngine');
 	rootFolderOption = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath');
 	ignoreRootFoldersOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders');
 	ignoreFilesOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles');
+	inputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('inputExtension');
 	outputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
 
 	// The command has been defined in the package.json file
@@ -34,9 +37,6 @@ function activate(context) {
 		// Display a message box to the user
 		// vscode.window.showInformationMessage('Hello VS Code!');
 		const rootfolders = vscode.workspace.workspaceFolders
-		console.log(rootfolders)
-
-		//let rootPathUri = ''
 		let rootPathFull = ''
 
 		// Support for only one workspace opened or rootPath set in config
@@ -51,11 +51,10 @@ function activate(context) {
 			console.log(`Root path found: ${rootFolderOption}`)
 		}
 	
-		// ignore folders need to be part of configuration
+		// ignore folders come from configuration
 		const ignoreFolders = ignoreRootFoldersOption
-		const ignoreFiles = ignoreFilesOption
-		
-		const bookFoldersPromise = getBookFiles(rootPathFull, ignoreFolders, ignoreFiles, '.md')		
+		const ignoreFiles = ignoreFilesOption		
+		const bookFoldersPromise = getBookFiles(rootPathFull, ignoreFolders, ignoreFiles, `.${inputExtensionOption}`)		
 		const bookFilesResponse = await Promise.resolve(bookFoldersPromise)
 		console.log(bookFilesResponse)		
 		
@@ -67,15 +66,15 @@ function activate(context) {
 
 				if(process.platform === "win32"){
 					if(element.isFolder){
-						filesArray.push(`${rootPathFull}\\${element.folderPath}\\${file}`)
+						filesArray.push(`"${rootPathFull}\\${element.folderPath}\\${file}"`)
 					} else {
-						filesArray.push(`${rootPathFull}\\${file}`)
+						filesArray.push(`"${rootPathFull}\\${file}"`)
 					}
 				} else {
 					if(element.isFolder){
-						filesArray.push(`./${element.folderPath}/${file}`)
+						filesArray.push(`./"${element.folderPath}/${file}"`)
 					} else {
-						filesArray.push(`./${file}`)
+						filesArray.push(`./"${file}"`)
 					}
 				}			
 			});
@@ -91,10 +90,12 @@ function activate(context) {
 			return
 		}		
 
-		let pandocCmdTest = `cd ${rootPathFull} && dir`
-		let pandocCmd = `cd ${rootPathFull} && pandoc -o book.pdf --pdf-engine=xelatex ${filesString}`
+		let pandocCmdTest = `cd "${rootPathFull}" && ls`
+		let pandocCmd = ''
 		if(outputExtensionOption !== "pdf"){		
-			pandocCmd = `cd ${rootPathFull} && pandoc -o book.${outputExtensionOption} ${filesString}`
+			pandocCmd = `cd "${rootPathFull}" && ${defaultPandocCommandOption}.${outputExtensionOption} ${filesString}`
+		} else {
+			pandocCmd = `cd "${rootPathFull}" && ${defaultPandocCommandOption}.${outputExtensionOption} --pdf-engine=${defaultPdfEngineOption} ${filesString}`
 		}
 
 		exec(pandocCmd, (error, stdout, stderr) => {
@@ -141,22 +142,24 @@ function activate(context) {
 			return
 		}		
 
-		if(!fullPath.includes('md')){
-			gutenbergOutputChannel.append(`File active is not markdown\n`)
-			vscode.window.showErrorMessage('File active is not markdown');
+		if(!fullPath.includes(`.${inputExtensionOption}`)){
+			gutenbergOutputChannel.append(`File active doesn't match input extension\n`)
+			vscode.window.showErrorMessage(`File active doesn't match input extension`);
 			return
 		}		
 
 		const filePath = path.dirname(fullPath)
 		const folderName = path.basename(filePath)
 		const fileName = path.basename(fullPath)
-		const fileNameNoExtension = path.basename(fullPath, '.md')
+		const fileNameNoExtension = path.basename(fullPath, `.${inputExtensionOption}`)
 
 		console.log(fullPath)
 
-		let pandocCmd = `cd ${rootPathFull} && pandoc -o ${filePath}/${fileNameNoExtension}.pdf --pdf-engine=xelatex ${filePath}/${fileName}`
+		let pandocCmd = ''
 		if(outputExtensionOption !== "pdf"){		
-			pandocCmd = `cd ${rootPathFull} && pandoc -o ${filePath}/${fileNameNoExtension}.${outputExtensionOption} ${filePath}/${fileName}`
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.${outputExtensionOption}" "${filePath}/${fileName}"`
+		} else {
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.pdf" --pdf-engine=xelatex "${filePath}/${fileName}"`
 		}
 
 		exec(pandocCmd, (error, stdout, stderr) => {
@@ -235,10 +238,11 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 					tempFiles.push(element[0])
 				}
 				if(element[1] == 2){
-					vscode.window.showInformationMessage(`Directory ${basePath} should not have nested folders`);
+					vscode.window.showWarningMessage(`Directory ${basePath} should not have nested folders`);
 				}
 				if(element[1] == 1 && !element[0].includes(fileExtension) && !ignoreFiles.includes(element[0])){
-					vscode.window.showInformationMessage(`Directory ${basePath} should only have ${fileExtension} files, ${element[0]} is not acceptable`);
+					vscode.window.showInformationMessage(`Directory ${basePath} should only have ${fileExtension} files,
+					 ${element[0]} is not acceptable, add to ignoreFiles configuration`);
 				}
 			});
 			
@@ -256,7 +260,8 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 			if(element.includes(fileExtension) && !ignoreFiles.includes(element)){
 				tempFiles.push(element)				
 			} else if(!element.includes(fileExtension) && !ignoreFiles.includes(element)){
-				vscode.window.showInformationMessage(`Files should only have ${fileExtension} extension, ${element} is not acceptable, add to ignoreFiles setting`);
+				vscode.window.showInformationMessage(`Files should only have ${fileExtension} extension,
+				 ${element} is not acceptable, add to ignoreFiles configuration`);
 			}
 
 			if(tempFiles.length > 0){
@@ -268,7 +273,6 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 			}
 		});			
 		
-	}	
-
+	}
 	return bookFiles
 }

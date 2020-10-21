@@ -45,10 +45,25 @@
 		"configuration": {
 			"title": "Gutenberg",
 			"properties": {
+				"gutenberg.defaultPandocCommand": {
+					"type": "string",
+					"default": "pandoc -o ./output/book",
+					"description": "Default Pandoc Command for advanced users, the book extension comes from outputExtension"
+				},
+				"gutenberg.defaultPdfEngine": {
+					"type": "string",
+					"default": "xelatex",
+					"description": "Default pdf engine"
+				},
 				"gutenberg.useDifferentRootPath": {
 					"type": "string",
 					"default": "",
 					"description": "By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used"
+				},
+				"gutenberg.inputExtension": {
+					"type": "string",
+					"default": "md",
+					"description": "Input file extension"
 				},
 				"gutenberg.outputExtension": {
 					"type": "string",
@@ -58,7 +73,8 @@
 				"gutenberg.ignoreRootPathFolders": {
 					"type": "array",
 					"default": [
-						"images"
+						"images",
+						"output"
 					],
 					"description": "Root path folders ignored from the book print"
 				},
