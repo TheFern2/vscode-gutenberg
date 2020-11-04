@@ -173,9 +173,9 @@ function activate(context) {
 
 		let pandocCmd = ''
 		if(outputExtensionOption !== "pdf"){		
-			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.${outputExtensionOption}" "${filePath}/${fileName}"`
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.${outputExtensionOption}" "${filePath}/${fileName}" ${pandocCommandExtraOption}`
 		} else {
-			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.pdf" --pdf-engine=xelatex "${filePath}/${fileName}"`
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.pdf" --pdf-engine=xelatex "${filePath}/${fileName}" ${pandocCommandExtraOption}`
 		}
 
 		exec(pandocCmd, (error, stdout, stderr) => {

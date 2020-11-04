@@ -4,6 +4,13 @@ All notable changes to the "vscode-markdown-pandoc" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 1.0.2
+
+Additions:
+- Added examples folder
+- Added pandocCommandExtra to single print
+- Added information on readme about mermaid support
+
 ## 1.0.1
 
 Bug Fixes:

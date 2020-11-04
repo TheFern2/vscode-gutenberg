@@ -4,6 +4,14 @@ This extension aims to bridge the gap between technical writers of markup langua
 
 Most of the existing extensions I've looked at, print a single markdown file, others preview markdown which is great, but none print a book (Unless I missed that extension somehow). This extension is strictly for writers that want to focus on writing markup and print without all the extra hassle.
 
+## Extension Support
+
+The extension supports anything that pandoc supports as that is what is being used in the background for all the magic. As time goes on, I'll keep adding what's supported here so that people can quickly read if is something they can use for school, or work.
+
+- any command that pandoc would normally take in the cmd line, can be added to `gutenberg.pandocCommandExtra`
+- mermaid diagrams tested with https://github.com/raghur/mermaid-filter
+    - add **--filter mermaid-filter** to `gutenberg.pandocCommandExtra` restart vscode for options to take.
+
 ## Features
 
 The extension has two commands:
@@ -62,7 +70,7 @@ Files in root path:
 This extension contributes the following settings:
 
 * `gutenberg.pandocCmdArgs`: Variables that are passed to the default pandoc command.
-* `gutenberg.pandocCommandExtra`: If any extra flags are needed, they go here, i.e. --template=, --toc, etc.
+* `gutenberg.pandocCommandExtra`: If any extra flags are needed, they go here, i.e. --template=, --toc, --filter,etc.
 * `gutenberg.useDifferentRootPath`: By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used.
 * `gutenberg.inputExtension`: Input file extension, if you're using something other than md.
 * `gutenberg.outputExtension`: Output file extension.
@@ -83,13 +91,14 @@ None
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+No major changes, added pandocCommandExtra to single print to be in par with book print. Added a bit of information regarding mermaid support.
 
-### 1.0.1
+### 1.0.2
 
-Bug Fixes:
-- Fixed issue with spaces in path
-- Added cmd arguments to configuration
+Additions:
+- Added examples folder
+- Added pandocCommandExtra to single print
+- Added information on readme about mermaid support
 
 ## Credits
 
