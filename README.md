@@ -1,3 +1,7 @@
+[![Latest Release](https://vsmarketplacebadge.apphb.com/version-short/TheFern.vscode-gutenberg.svg)](https://marketplace.visualstudio.com/items?itemName=TheFern.vscode-gutenberg)
+[![Installs](https://vsmarketplacebadge.apphb.com/installs/TheFern.vscode-gutenberg.svg)](https://marketplace.visualstudio.com/items?itemName=TheFern.vscode-gutenberg)
+[![Rating](https://vsmarketplacebadge.apphb.com/rating-short/TheFern.vscode-gutenberg.svg)](https://marketplace.visualstudio.com/items?itemName=TheFern.vscode-gutenberg#review-details)
+
 # vscode-gutenberg
 
 This extension aims to bridge the gap between technical writers of markup languages such as markdown, and eventually a few other light weight markups extensions. The goal is to take files, and print them into a book pdf, doc, or html.
