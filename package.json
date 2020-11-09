@@ -28,7 +28,8 @@
 	],
 	"activationEvents": [
 		"onCommand:vscode-gutenberg.printBook",
-		"onCommand:vscode-gutenberg.printSingle"
+		"onCommand:vscode-gutenberg.printSingle",
+		"onCommand:vscode-gutenberg.selectFiles"
 	],
 	"main": "./extension.js",
 	"contributes": {
@@ -40,6 +41,10 @@
 			{
 				"command": "vscode-gutenberg.printSingle",
 				"title": "gutenberg: Print Single"
+			},
+			{
+				"command": "vscode-gutenberg.selectFiles",
+				"title": "gutenberg: Select Files to Print"
 			}
 		],
 		"configuration": {

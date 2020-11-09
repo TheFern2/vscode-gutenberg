@@ -199,8 +199,39 @@ function activate(context) {
 		console.log('End of function')
 	})
 
+	let disposable3 = vscode.commands.registerCommand('vscode-gutenberg.selectFiles', function (){
+		
+		// Read recursively files from workspace
+
+		// Show files on webview
+
+		// generate .selectedFiles with those files
+		
+		const panel = vscode.window.createWebviewPanel(
+			'testPanel',
+			'Select Files for Printing',
+			vscode.ViewColumn.One,
+			{}
+		)
+
+		
+		const someArray = ['one', 'two', 'three']
+		const listHTML = []
+		someArray.forEach(textFile => {
+			listHTML.push(
+				`<div>
+					<input type="checkbox" id="subscribeNews" name="subscribe" value="newsletter">
+					<label for="subscribeNews">${textFile}</label>
+			  	</div>`
+			)
+		})
+		panel.webview.html = getWebviewContent(listHTML)
+	})
+
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);
+	context.subscriptions.push(disposable3);
+
 }
 exports.activate = activate;
 
@@ -291,4 +322,19 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 		
 	}
 	return bookFiles
+}
+
+function getWebviewContent(list) {
+	return `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+	  <meta charset="UTF-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <title>Cat Coding</title>
+  </head>
+  <body>
+	  <h1>Hello</h1>
+	  ${list}
+  </body>
+  </html>`;
 }
