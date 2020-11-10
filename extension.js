@@ -349,17 +349,32 @@ function getWebviewContent(list) {
   <body>
 	  <h1>Hello</h1>
 	  <div>${list}</div>
+	  <div>
+		  <button onClick="retrieveCheckboxes()">Save File List</button>
+	  <div>
 	  <script>
-        (function() {
+        function retrieveCheckboxes(){
             const vscode = acquireVsCodeApi();
-            const someCheckbox = document.getElementById('0');
-			console.log(someCheckbox.checked)
+            //const someCheckbox = document.getElementById('0');
+			var checkboxStatuses = ['cat']
+
+			// list.forEach((textFile, index) => {
+			// 	const aCheckbox = document.getElementById(index);
+			// 	checkboxStatuses.push(aCheckbox.checked)
+			// })
+
+			// for(let i = 0; i < list.length; i++){
+			// 	const aCheckbox = document.getElementById(i);
+			// 	checkboxStatuses.push(aCheckbox.checked)
+			// }
+
+
 			vscode.postMessage({
 				command: 'status',
-				text: someCheckbox.checked
+				text: 'someText'
 			})
-			
-        }())
+		}	
+        
     </script>
   </body>
   </html>`;
