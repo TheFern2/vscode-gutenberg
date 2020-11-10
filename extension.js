@@ -205,11 +205,9 @@ function activate(context) {
 
 		// Show files on webview
 
-		// Retrieve selected checkboxes
+		// Retrieve selected checkboxes, when button is pressed & generate .selectedFiles file for next time
 
-		// generate .selectedFiles with those files
-
-		// print file
+		// print file => another command print Selected Files based on .selectedFiles file
 		
 		const panel = vscode.window.createWebviewPanel(
 			'testPanel',
