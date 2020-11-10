@@ -30,7 +30,7 @@ function activate(context) {
 	inputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('inputExtension');
 	outputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
 
-	console.log(pandocCmdArgsOption)
+	//console.log(pandocCmdArgsOption)
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -60,7 +60,7 @@ function activate(context) {
 		const ignoreFiles = ignoreFilesOption		
 		const bookFoldersPromise = getBookFiles(rootPathFull, ignoreFolders, ignoreFiles, `.${inputExtensionOption}`)		
 		const bookFilesResponse = await Promise.resolve(bookFoldersPromise)
-		console.log(bookFilesResponse)		
+		//console.log(bookFilesResponse)		
 		
 		// Need to join the filesString for the pandoc command
 		let filesArray = []
@@ -84,7 +84,7 @@ function activate(context) {
 			});
 		});
 
-		console.log(process.platform)
+		//console.log(process.platform)
 
 		if(filesArray.length > 0){
 			vscode.window.showInformationMessage('Files names have been collected');
@@ -205,27 +205,43 @@ function activate(context) {
 
 		// Show files on webview
 
+		// Retrieve selected checkboxes
+
 		// generate .selectedFiles with those files
+
+		// print file
 		
 		const panel = vscode.window.createWebviewPanel(
 			'testPanel',
 			'Select Files for Printing',
 			vscode.ViewColumn.One,
-			{}
+			{
+				enableScripts: true
+			}
 		)
 
 		
-		const someArray = ['one', 'two', 'three']
+		const someArray = ['one.md', 'two.md', 'three.md', '/chapter/file.md']
 		const listHTML = []
-		someArray.forEach(textFile => {
+		someArray.forEach((textFile, index) => {
 			listHTML.push(
-				`<div>
-					<input type="checkbox" id="subscribeNews" name="subscribe" value="newsletter">
-					<label for="subscribeNews">${textFile}</label>
-			  	</div>`
+				`<input type="checkbox" id="${index}" name="fileName" value="1" checked> ${textFile}</br>`
 			)
 		})
-		panel.webview.html = getWebviewContent(listHTML)
+		panel.webview.html = getWebviewContent(listHTML.join(' '))
+
+		// Handle messages from the webview
+		panel.webview.onDidReceiveMessage(
+			message => {
+			  switch (message.command) {
+				case 'status':
+				  console.log(message.text);
+				  return;
+			  }
+			},
+			undefined,
+			context.subscriptions
+		);
 	})
 
 	context.subscriptions.push(disposable);
@@ -334,7 +350,19 @@ function getWebviewContent(list) {
   </head>
   <body>
 	  <h1>Hello</h1>
-	  ${list}
+	  <div>${list}</div>
+	  <script>
+        (function() {
+            const vscode = acquireVsCodeApi();
+            const someCheckbox = document.getElementById('0');
+			console.log(someCheckbox.checked)
+			vscode.postMessage({
+				command: 'status',
+				text: someCheckbox.checked
+			})
+			
+        }())
+    </script>
   </body>
   </html>`;
 }
