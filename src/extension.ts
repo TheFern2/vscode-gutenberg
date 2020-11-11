@@ -15,6 +15,11 @@ interface pandocCmdArgs {
 	"pdfEngine": string;
 }
 
+interface fileSelected {
+	"filePath": string;
+	"checked": boolean;
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 /**
@@ -384,7 +389,7 @@ async function getFiles(dir:string) {
 	return Array.prototype.concat(...files);
 }
 
-async function printSelectedFiles(rootPathFull:string, data:Array<object>, outputExtensionOption:string,
+async function printSelectedFiles(rootPathFull:string, data:Array<fileSelected>, outputExtensionOption:string,
 								  pandocCmdArgsOption:pandocCmdArgs, gutenbergOutputChannel: vscode.OutputChannel,
 								  pandocCommandExtraOption:string){
 	let selectedFiles = searchSelected(data)
@@ -431,7 +436,7 @@ async function printSelectedFiles(rootPathFull:string, data:Array<object>, outpu
 
 }
 
-function searchSelected(data:Array<object>){
+function searchSelected(data:Array<fileSelected>){
 	let selectedFiles = []
 	
 	for (var i=0; i < data.length; i++) {
@@ -442,7 +447,7 @@ function searchSelected(data:Array<object>){
 	return selectedFiles
 }
 
-function search(nameKey:string, data:Array<object>){
+function search(nameKey:string, data:Array<fileSelected>){
 	for (var i=0; i < data.length; i++) {
         if (data[i].filePath === nameKey) {
             return i;
