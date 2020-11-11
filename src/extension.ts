@@ -182,9 +182,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		const configExists = await fs.pathExists(`${rootPathFull}/.selectedFiles.json`)
-		const configData = fs.readFileSync(`${rootPathFull}/.selectedFiles.json`)
-		const configDataJSON = JSON.parse(configData)
-		console.log(configDataJSON)
+		if(configExists){
+			var configData = fs.readFileSync(`${rootPathFull}/.selectedFiles.json`)
+			var configDataJSON = JSON.parse(configData)
+			console.log(configDataJSON)
+		}		
 		
 		// Read recursively files from workspace
 		const filesInDir = await Promise.resolve( getFiles(rootPathFull))
@@ -233,11 +235,11 @@ export function activate(context: vscode.ExtensionContext) {
 					const isChecked = configDataJSON[dataIndex].checked
 					if(isChecked){
 						listHTML.push(
-							`<input type="checkbox" id="${index}" name="fileName" value="1" checked> ${textFile}</br>`
+							`<input type="checkbox" id="${index}" name="fileName" value="${textFile}" checked> ${textFile}</br>`
 						)
 					} else {
 						listHTML.push(
-							`<input type="checkbox" id="${index}" name="fileName" value="1"> ${textFile}</br>`
+							`<input type="checkbox" id="${index}" name="fileName" value="${textFile}"> ${textFile}</br>`
 						)
 					}
 					return
@@ -245,7 +247,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			listHTML.push(
-				`<input type="checkbox" id="${index}" name="fileName" value="1"> ${textFile}</br>`
+				`<input type="checkbox" id="${index}" name="fileName" value="${textFile}"> ${textFile}</br>`
 			)
 		})
 		panel.webview.html = getWebviewContent(listHTML.join(' '))
@@ -257,10 +259,11 @@ export function activate(context: vscode.ExtensionContext) {
 			  switch (message.command) {
 				case 'print':
 				  console.log(message.checkboxStatuses);
-				  console.log(fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses))
-				  saveCheckboxesStatus(rootPathFull, fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses))
+				  //console.log(fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses))
+				  saveCheckboxesStatus(rootPathFull, message.checkboxStatuses)
 				  
-				  const data = fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses)
+				//   //const data = fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses)
+				  const data = message.checkboxStatuses
 					printSelectedFiles(
 						rootPathFull, 
 						data, 
@@ -506,11 +509,15 @@ function getWebviewContent(checkboxesHtml:string) {
         function retrieveCheckboxes(){
             
 			const checkboxes = document.getElementsByName('fileName')
-			const someCheckbox = document.getElementById('0');
 			var checkboxStatuses = []
 
 			checkboxes.forEach(checkbox => {
-				checkboxStatuses.push(checkbox.checked)
+				checkboxStatuses.push(
+					{
+						'filePath': checkbox.value,
+						'checked': checkbox.checked
+
+					})
 			})
 
 			vscode.postMessage({
