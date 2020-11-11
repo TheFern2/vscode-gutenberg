@@ -476,7 +476,8 @@ function getWebviewContent(checkboxesHtml:string) {
   </head>
   <body>
 	  <h1>vscode-gutenberg</h1>
-	  <button onClick="toggleCheckboxes()">  Toggle List</button>
+	  <button onClick="checkAll()">  Select All</button>
+	  <button onClick="uncheckAll()">  Unselect All</button>
 	  <div>${checkboxesHtml}</div>
 	  <div>
 		  <button onClick="retrieveCheckboxes()">  Print Book</button>
@@ -484,14 +485,21 @@ function getWebviewContent(checkboxesHtml:string) {
 	  <script>
 	  var vscode = acquireVsCodeApi();
 		  
-	  	function toggleCheckboxes(){
+	  	function checkAll(){
+			const checkboxes = document.getElementsByName('fileName')
+			checkboxes.forEach(checkbox => {
+				if(!checkbox.checked){
+					checkbox.checked = true
+				}			
+			})
+		}
+
+		function uncheckAll(){
 			const checkboxes = document.getElementsByName('fileName')
 			checkboxes.forEach(checkbox => {
 				if(checkbox.checked){
 					checkbox.checked = false
-				} else{
-					checkbox.checked = true
-				}				
+				}			
 			})
 		}
 
