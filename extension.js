@@ -4,7 +4,9 @@ const vscode = require('vscode');
 const path = require('path');
 const { exec } = require("child_process");
 const process = require("process")
-const fs = require('fs-extra')
+const fs = require('fs-extra');
+const {readdir} = require('fs').promises;
+const {resolve} = require('path')
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -199,13 +201,36 @@ function activate(context) {
 		console.log('End of function')
 	})
 
-	let disposable3 = vscode.commands.registerCommand('vscode-gutenberg.selectFiles', function (){
+	let disposable3 = vscode.commands.registerCommand('vscode-gutenberg.selectFiles', async function (){
+		const rootfolders = vscode.workspace.workspaceFolders
+		let rootPathFull = ''
+
+		// Support for only one workspace opened or rootPath set in config
+		if(rootfolders.length === 1 && rootFolderOption === ""){
+			//rootPathUri = rootfolders[0].uri
+			rootPathFull = rootfolders[0].uri.fsPath
+			console.log(`Root path found: ${rootfolders[0].name}`)
+		}
+
+		if(rootFolderOption){
+			rootPathFull = rootFolderOption
+			console.log(`Root path found: ${rootFolderOption}`)
+		}
 		
 		// Read recursively files from workspace
+		const filesInDir = await Promise.resolve( getFiles(rootPathFull))
+		// getFiles(rootPathFull)
+		// 	.then(files => console.log(files))
+		// 	.catch(e => console.error(e));
+		console.log(filesInDir)
 
-		// Show files on webview
+		const filesWithoutRootPath = []
+		filesInDir.forEach(file => {
+			initialIndex = rootPathFull.length
+			filesWithoutRootPath.push(file.substr(initialIndex))
+		})
 
-		// Retrieve selected checkboxes, when button is pressed & generate .selectedFiles file for next time
+		console.log(filesWithoutRootPath)
 
 		// print file => another command print Selected Files based on .selectedFiles file
 		
@@ -217,23 +242,25 @@ function activate(context) {
 				enableScripts: true
 			}
 		)
-
 		
-		const someArray = ['one.md', 'two.md', 'three.md', '/chapter/file.md']
+		//const someArray = ['one.md', 'two.md', 'three.md', '/chapter/file.md']
+
+		// Show files on webview
 		const listHTML = []
-		someArray.forEach((textFile, index) => {
+		filesWithoutRootPath.forEach((textFile, index) => {
 			listHTML.push(
-				`<input type="checkbox" id="${index}" name="fileName" value="1" checked> ${textFile}</br>`
+				`<input type="checkbox" id="${index}" name="fileName" value="1"> ${textFile}</br>`
 			)
 		})
 		panel.webview.html = getWebviewContent(listHTML.join(' '))
 
 		// Handle messages from the webview
+		// Retrieve selected checkboxes, when button is pressed & generate .selectedFiles file for next time
 		panel.webview.onDidReceiveMessage(
 			message => {
 			  switch (message.command) {
 				case 'status':
-				  console.log(message.text);
+				  console.log(message.checkboxStatuses);
 				  return;
 			  }
 			},
@@ -338,40 +365,86 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 	return bookFiles
 }
 
+async function getFiles(dir) {
+	const dirents = await readdir(dir, { withFileTypes: true });
+	const files = await Promise.all(dirents.map((dirent) => {
+	  const res = resolve(dir, dirent.name);
+	  return dirent.isDirectory() ? getFiles(res) : res;
+	}));
+	return Array.prototype.concat(...files);
+}
+
+function runPandocCommand(){
+	let pandocCmd = ''
+		if(outputExtensionOption !== "pdf"){		
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} ${filesString} ${pandocCommandExtraOption}`
+		} else {
+			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} --pdf-engine=${pandocCmdArgsOption.pdfEngine} ${filesString} ${pandocCommandExtraOption}`
+		}
+
+		exec(pandocCmd, (error, stdout, stderr) => {
+			if (error !== null) {
+				console.log(`error: ${error.message}`);
+				gutenbergOutputChannel.append(`error: ${error.message}\n`)
+			}
+			if (stderr !== null && stderr !== "") {
+				console.log(`stderr: ${stderr}`);
+				vscode.window.showErrorMessage('stderr: ' + stderr.toString());
+				gutenbergOutputChannel.append(`stderr: ${stderr}\n`)
+				
+			}
+			if (stdout !== null){
+				console.log(`stdout: ${stdout}`);
+				gutenbergOutputChannel.append(`stdout: ${stdout}\n`)
+			}
+			
+		});
+
+		console.log('End of function')
+}
+
 function getWebviewContent(list) {
 	return `<!DOCTYPE html>
   <html lang="en">
   <head>
 	  <meta charset="UTF-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	  <title>Cat Coding</title>
+	  <title>Gutenberg</title>
   </head>
   <body>
-	  <h1>Hello</h1>
+	  <h1>vscode-gutenberg</h1>
+	  <button onClick="toggleCheckboxes()">  Toggle List</button>
 	  <div>${list}</div>
 	  <div>
-		  <button onClick="retrieveCheckboxes()">Save File List</button>
+		  <button onClick="retrieveCheckboxes()">  Save File List</button>
 	  <div>
 	  <script>
+	  var vscode = acquireVsCodeApi();
+		  
+	  	function toggleCheckboxes(){
+			const checkboxes = document.getElementsByName('fileName')
+			checkboxes.forEach(checkbox => {
+				if(checkbox.checked){
+					checkbox.checked = false
+				} else{
+					checkbox.checked = true
+				}				
+			})
+		}
+
         function retrieveCheckboxes(){
-            const vscode = acquireVsCodeApi();
-            //const someCheckbox = document.getElementById('0');
-			var checkboxStatuses = ['cat']
+            
+			const checkboxes = document.getElementsByName('fileName')
+			const someCheckbox = document.getElementById('0');
+			var checkboxStatuses = []
 
-			// list.forEach((textFile, index) => {
-			// 	const aCheckbox = document.getElementById(index);
-			// 	checkboxStatuses.push(aCheckbox.checked)
-			// })
-
-			// for(let i = 0; i < list.length; i++){
-			// 	const aCheckbox = document.getElementById(i);
-			// 	checkboxStatuses.push(aCheckbox.checked)
-			// }
-
+			checkboxes.forEach(checkbox => {
+				checkboxStatuses.push(checkbox.checked)
+			})
 
 			vscode.postMessage({
 				command: 'status',
-				text: 'someText'
+				checkboxStatuses: checkboxStatuses
 			})
 		}	
         
