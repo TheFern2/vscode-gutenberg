@@ -1,20 +1,26 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-const vscode = require('vscode');
+import * as vscode from 'vscode'
+import {executePandoc} from './utils/pandoc'
 const path = require('path');
 const { exec } = require("child_process");
-const process = require("process")
+import * as process from 'process'
 const fs = require('fs-extra');
 const {readdir} = require('fs').promises;
 const {resolve} = require('path')
 
+interface pandocCmdArgs {
+	"outputFolder": string;
+	"bookName": string;
+	"pdfEngine": string;
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-
 /**
  * @param {vscode.ExtensionContext} context
  */
-function activate(context) {
+export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
@@ -23,39 +29,36 @@ function activate(context) {
 	var gutenbergOutputChannel = vscode.window.createOutputChannel('Gutenberg')
 
 	// Options
-	pandocCmdArgsOption = vscode.workspace.getConfiguration('gutenberg').get('pandocCmdArgs');
-	pandocCommandExtraOption = vscode.workspace.getConfiguration('gutenberg').get('pandocCommandExtra');
-	defaultPdfEngineOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPdfEngine');
-	rootFolderOption = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath');
-	ignoreRootFoldersOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders');
-	ignoreFilesOption = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles');
-	inputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('inputExtension');
-	outputExtensionOption = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
+	var pandocCmdArgsOption:pandocCmdArgs = vscode.workspace.getConfiguration('gutenberg').get('pandocCmdArgs');
+	var pandocCommandExtraOption:string = vscode.workspace.getConfiguration('gutenberg').get('pandocCommandExtra');
+	var defaultPdfEngineOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPdfEngine');
+	var rootFolderOption:string = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath');
+	var ignoreRootFoldersOption:Array<string> = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders');
+	var ignoreFilesOption:Array<string> = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles');
+	var inputExtensionOption:string = vscode.workspace.getConfiguration('gutenberg').get('inputExtension');
+	var outputExtensionOption:string = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
 
-	//console.log(pandocCmdArgsOption)
+	// Grab root folder
+	const rootfolders = vscode.workspace.workspaceFolders
+	let rootPathFull = ''
+
+	// Support for only one workspace opened or rootPath set in config
+	if(rootfolders.length === 1 && rootFolderOption === ""){
+		//rootPathUri = rootfolders[0].uri
+		rootPathFull = rootfolders[0].uri.fsPath
+		console.log(`Root path: ${rootfolders[0].name}`)
+	}
+
+	if(rootFolderOption){
+		rootPathFull = rootFolderOption
+		console.log(`Root path: ${rootFolderOption}`)
+	}
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('vscode-gutenberg.printBook', async function () {
 		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		// vscode.window.showInformationMessage('Hello VS Code!');
-		const rootfolders = vscode.workspace.workspaceFolders
-		let rootPathFull = ''
-
-		// Support for only one workspace opened or rootPath set in config
-		if(rootfolders.length === 1 && rootFolderOption === ""){
-			//rootPathUri = rootfolders[0].uri
-			rootPathFull = rootfolders[0].uri.fsPath
-			console.log(`Root path found: ${rootfolders[0].name}`)
-		}
-
-		if(rootFolderOption){
-			rootPathFull = rootFolderOption
-			console.log(`Root path found: ${rootFolderOption}`)
-		}
 	
 		// ignore folders come from configuration
 		const ignoreFolders = ignoreRootFoldersOption
@@ -65,7 +68,7 @@ function activate(context) {
 		//console.log(bookFilesResponse)		
 		
 		// Need to join the filesString for the pandoc command
-		let filesArray = []
+		let filesArray:Array<string> = []
 		let filesString = ''
 		bookFilesResponse.forEach(element => {
 			element.files.forEach(file => {	
@@ -116,36 +119,13 @@ function activate(context) {
 			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} --pdf-engine=${pandocCmdArgsOption.pdfEngine} ${filesString} ${pandocCommandExtraOption}`
 		}
 
-		exec(pandocCmd, (error, stdout, stderr) => {
-			if (error !== null) {
-				console.log(`error: ${error.message}`);
-				gutenbergOutputChannel.append(`error: ${error.message}\n`)
-			}
-			if (stderr !== null && stderr !== "") {
-				console.log(`stderr: ${stderr}`);
-				vscode.window.showErrorMessage('stderr: ' + stderr.toString());
-				gutenbergOutputChannel.append(`stderr: ${stderr}\n`)
-				
-			}
-			if (stdout !== null){
-				console.log(`stdout: ${stdout}`);
-				gutenbergOutputChannel.append(`stdout: ${stdout}\n`)
-			}
-			
-		});
+		executePandoc(pandocCmd, gutenbergOutputChannel)
 
 		console.log('End of function')
 	});
 
 	let disposable2 = vscode.commands.registerCommand('vscode-gutenberg.printSingle', function () {
-		console.log('Print a single file')
-		const rootfolders = vscode.workspace.workspaceFolders
-
-		if(rootFolderOption){
-			rootPathFull = rootFolderOption
-		} else {
-			rootPathFull = rootfolders[0].uri.fsPath
-		}		
+		console.log('Print a single file')	
 
 		let fullPath = ''
 		const editor = vscode.window.activeTextEditor
@@ -180,23 +160,7 @@ function activate(context) {
 			pandocCmd = `cd "${rootPathFull}" && pandoc -o "${filePath}/${fileNameNoExtension}.pdf" --pdf-engine=xelatex "${filePath}/${fileName}" ${pandocCommandExtraOption}`
 		}
 
-		exec(pandocCmd, (error, stdout, stderr) => {
-			if (error !== null) {
-				console.log(`error: ${error.message}`);
-				gutenbergOutputChannel.append(`error: ${error.message}\n`)
-			}
-			if (stderr !== null && stderr !== "") {
-				console.log(`stderr: ${stderr}`);
-				vscode.window.showErrorMessage('stderr: ' + stderr.toString());
-				gutenbergOutputChannel.append(`stderr: ${stderr}\n`)
-				
-			}
-			if (stdout !== null){
-				console.log(`stdout: ${stdout}`);
-				gutenbergOutputChannel.append(`stdout: ${stdout}\n`)
-			}
-			
-		});
+		executePandoc(pandocCmd, gutenbergOutputChannel)
 
 		console.log('End of function')
 	})
@@ -216,6 +180,11 @@ function activate(context) {
 			rootPathFull = rootFolderOption
 			console.log(`Root path found: ${rootFolderOption}`)
 		}
+
+		const configExists = await fs.pathExists(`${rootPathFull}/.selectedFiles.json`)
+		const configData = fs.readFileSync(`${rootPathFull}/.selectedFiles.json`)
+		const configDataJSON = JSON.parse(configData)
+		console.log(configDataJSON)
 		
 		// Read recursively files from workspace
 		const filesInDir = await Promise.resolve( getFiles(rootPathFull))
@@ -226,8 +195,16 @@ function activate(context) {
 
 		const filesWithoutRootPath = []
 		filesInDir.forEach(file => {
-			initialIndex = rootPathFull.length
-			filesWithoutRootPath.push(file.substr(initialIndex))
+			const initialIndex = rootPathFull.length + 1
+			const fileName = path.basename(file)
+			const fileBase = path.dirname(file)
+			const folderName = path.basename(fileBase)
+			// if the folderName is an ignore folder, continue to next filePath
+			if(ignoreRootFoldersOption.includes(folderName)){
+				return
+			} else if(!ignoreFilesOption.includes(fileName)){
+				filesWithoutRootPath.push(file.substr(initialIndex))
+			}
 		})
 
 		console.log(filesWithoutRootPath)
@@ -246,8 +223,27 @@ function activate(context) {
 		//const someArray = ['one.md', 'two.md', 'three.md', '/chapter/file.md']
 
 		// Show files on webview
-		const listHTML = []
+		const listHTML: Array<string> = []
 		filesWithoutRootPath.forEach((textFile, index) => {
+			// here we need to load json data, and check if textFile exists
+
+			if(configExists){
+				if(search(textFile, configDataJSON) >= 0){
+					const dataIndex = search(textFile, configDataJSON)
+					const isChecked = configDataJSON[dataIndex].checked
+					if(isChecked){
+						listHTML.push(
+							`<input type="checkbox" id="${index}" name="fileName" value="1" checked> ${textFile}</br>`
+						)
+					} else {
+						listHTML.push(
+							`<input type="checkbox" id="${index}" name="fileName" value="1"> ${textFile}</br>`
+						)
+					}
+					return
+				}
+			}
+
 			listHTML.push(
 				`<input type="checkbox" id="${index}" name="fileName" value="1"> ${textFile}</br>`
 			)
@@ -259,9 +255,20 @@ function activate(context) {
 		panel.webview.onDidReceiveMessage(
 			message => {
 			  switch (message.command) {
-				case 'status':
+				case 'print':
 				  console.log(message.checkboxStatuses);
-				  return;
+				  console.log(fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses))
+				  saveCheckboxesStatus(rootPathFull, fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses))
+				  
+				  const data = fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses)
+					printSelectedFiles(
+						rootPathFull, 
+						data, 
+						outputExtensionOption, 
+						pandocCmdArgsOption,
+						gutenbergOutputChannel,
+						pandocCommandExtraOption)
+				  break;
 			  }
 			},
 			undefined,
@@ -289,7 +296,7 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 	let bookFoldersPromise = await Promise.resolve(vscode.workspace.fs.readDirectory( vscode.Uri.file(rootPath)))
 	let bookFoldersPaths = []
 	let bookPaths = await Promise.resolve(bookFoldersPromise)
-	let bookFilesOnRoot = []
+	let bookFilesOnRoot:Array<string> = []
 
 	bookPaths.forEach(value => {
 		// add folder paths here
@@ -365,7 +372,7 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 	return bookFiles
 }
 
-async function getFiles(dir) {
+async function getFiles(dir:string) {
 	const dirents = await readdir(dir, { withFileTypes: true });
 	const files = await Promise.all(dirents.map((dirent) => {
 	  const res = resolve(dir, dirent.name);
@@ -374,36 +381,92 @@ async function getFiles(dir) {
 	return Array.prototype.concat(...files);
 }
 
-function runPandocCommand(){
-	let pandocCmd = ''
-		if(outputExtensionOption !== "pdf"){		
-			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} ${filesString} ${pandocCommandExtraOption}`
+async function printSelectedFiles(rootPathFull:string, data:Array<object>, outputExtensionOption:string,
+								  pandocCmdArgsOption:pandocCmdArgs, gutenbergOutputChannel: vscode.OutputChannel,
+								  pandocCommandExtraOption:string){
+	let selectedFiles = searchSelected(data)
+	let filesArray:Array<string> = []
+	let filesString = ''
+
+	selectedFiles.forEach(file => {
+		if(process.platform === "win32"){
+			filesArray.push(`"${rootPathFull}\\${file}"`)
 		} else {
-			pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} --pdf-engine=${pandocCmdArgsOption.pdfEngine} ${filesString} ${pandocCommandExtraOption}`
+			filesArray.push(`./"${file}"`)
 		}
+	})
+	
+	if(filesArray.length > 0){
+		vscode.window.showInformationMessage('Files names have been collected');
+		filesString = filesArray.join(" ")
+	} else {
+		vscode.window.showErrorMessage('No files selected!');
+		return
+	}
+	
+	// Ensure output folder exists
+	const outputFolderExists = await fs.pathExists(`${rootPathFull}/${pandocCmdArgsOption.outputFolder}`)
+	if(!outputFolderExists){
+		try {
+			await fs.ensureDir(`${rootPathFull}/${pandocCmdArgsOption.outputFolder}`)
+			console.log('success!')
+		  } catch (err) {
+			console.error(err)
+			vscode.window.showErrorMessage(err);
+		  }
+	}
 
-		exec(pandocCmd, (error, stdout, stderr) => {
-			if (error !== null) {
-				console.log(`error: ${error.message}`);
-				gutenbergOutputChannel.append(`error: ${error.message}\n`)
-			}
-			if (stderr !== null && stderr !== "") {
-				console.log(`stderr: ${stderr}`);
-				vscode.window.showErrorMessage('stderr: ' + stderr.toString());
-				gutenbergOutputChannel.append(`stderr: ${stderr}\n`)
-				
-			}
-			if (stdout !== null){
-				console.log(`stdout: ${stdout}`);
-				gutenbergOutputChannel.append(`stdout: ${stdout}\n`)
-			}
-			
-		});
+	let pandocCmdTest = `cd "${rootPathFull}" && ls`
+	let pandocCmd = ''
+	if(outputExtensionOption !== "pdf"){		
+		pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} ${filesString} ${pandocCommandExtraOption}`
+	} else {
+		pandocCmd = `cd "${rootPathFull}" && pandoc -o ./${pandocCmdArgsOption.outputFolder}/${pandocCmdArgsOption.bookName}.${outputExtensionOption} --pdf-engine=${pandocCmdArgsOption.pdfEngine} ${filesString} ${pandocCommandExtraOption}`
+	}
 
-		console.log('End of function')
+	executePandoc(pandocCmd, gutenbergOutputChannel)
+
 }
 
-function getWebviewContent(list) {
+function searchSelected(data:Array<object>){
+	let selectedFiles = []
+	
+	for (var i=0; i < data.length; i++) {
+        if (data[i].checked === true) {
+            selectedFiles.push(data[i].filePath)
+        }
+	}
+	return selectedFiles
+}
+
+function search(nameKey:string, data:Array<object>){
+	for (var i=0; i < data.length; i++) {
+        if (data[i].filePath === nameKey) {
+            return i;
+        }
+	}
+	return -1
+}
+
+function saveCheckboxesStatus(rootPath:string, data:Array<object>){
+	fs.writeFile(`${rootPath}/.selectedFiles.json`, JSON.stringify(data), (err) => {
+		if (err) throw err;
+		console.log('Data written to file');
+	});
+}
+
+function fileCheckboxStatus(htmlList:Array<string>, statuses:Array<boolean>){
+	let combinedArray = []
+	htmlList.forEach((file, index) => {
+		combinedArray.push({
+			'filePath': file,
+			'checked': statuses[index]
+		})
+	})
+	return combinedArray
+}
+
+function getWebviewContent(checkboxesHtml:string) {
 	return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -414,9 +477,9 @@ function getWebviewContent(list) {
   <body>
 	  <h1>vscode-gutenberg</h1>
 	  <button onClick="toggleCheckboxes()">  Toggle List</button>
-	  <div>${list}</div>
+	  <div>${checkboxesHtml}</div>
 	  <div>
-		  <button onClick="retrieveCheckboxes()">  Save File List</button>
+		  <button onClick="retrieveCheckboxes()">  Print Book</button>
 	  <div>
 	  <script>
 	  var vscode = acquireVsCodeApi();
@@ -443,7 +506,7 @@ function getWebviewContent(list) {
 			})
 
 			vscode.postMessage({
-				command: 'status',
+				command: 'print',
 				checkboxStatuses: checkboxStatuses
 			})
 		}	

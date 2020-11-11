@@ -4,3 +4,5 @@ node_modules
 test/**/*.pdf
 test/**/*.docx
 test/**/*.html
+out
+pnpm-lock.yaml
