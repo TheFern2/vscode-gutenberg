@@ -2,12 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import {executePandoc} from './utils/pandoc'
-const path = require('path');
-const { exec } = require("child_process");
+import * as path from 'path'
 import * as process from 'process'
-const fs = require('fs-extra');
-const {readdir} = require('fs').promises;
-const {resolve} = require('path')
+const fs = require('fs-extra')
+import {resolve} from 'path'
 
 interface pandocCmdArgs {
 	"outputFolder": string;
@@ -18,6 +16,12 @@ interface pandocCmdArgs {
 interface fileSelected {
 	"filePath": string;
 	"checked": boolean;
+}
+
+interface ADirent {
+	"name": string;
+	"Symbol(type)": number;
+	isDirectory(): boolean;
 }
 
 // this method is called when your extension is activated
@@ -34,17 +38,16 @@ export function activate(context: vscode.ExtensionContext) {
 	var gutenbergOutputChannel = vscode.window.createOutputChannel('Gutenberg')
 
 	// Options
-	var pandocCmdArgsOption:pandocCmdArgs = vscode.workspace.getConfiguration('gutenberg').get('pandocCmdArgs');
-	var pandocCommandExtraOption:string = vscode.workspace.getConfiguration('gutenberg').get('pandocCommandExtra');
-	var defaultPdfEngineOption = vscode.workspace.getConfiguration('gutenberg').get('defaultPdfEngine');
-	var rootFolderOption:string = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath');
-	var ignoreRootFoldersOption:Array<string> = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders');
-	var ignoreFilesOption:Array<string> = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles');
-	var inputExtensionOption:string = vscode.workspace.getConfiguration('gutenberg').get('inputExtension');
-	var outputExtensionOption:string = vscode.workspace.getConfiguration('gutenberg').get('outputExtension');
+	var pandocCmdArgsOption:pandocCmdArgs = vscode.workspace.getConfiguration('gutenberg').get('pandocCmdArgs') as pandocCmdArgs;
+	var pandocCommandExtraOption:string = vscode.workspace.getConfiguration('gutenberg').get('pandocCommandExtra') as string;
+	var rootFolderOption:string = vscode.workspace.getConfiguration('gutenberg').get('useDifferentRootPath') as string;
+	var ignoreRootFoldersOption:Array<string> = vscode.workspace.getConfiguration('gutenberg').get('ignoreRootPathFolders') as Array<string>;
+	var ignoreFilesOption:Array<string> = vscode.workspace.getConfiguration('gutenberg').get('ignoreFiles') as Array<string>;
+	var inputExtensionOption:string = vscode.workspace.getConfiguration('gutenberg').get('inputExtension') as string;
+	var outputExtensionOption:string = vscode.workspace.getConfiguration('gutenberg').get('outputExtension') as string;
 
 	// Grab root folder
-	const rootfolders = vscode.workspace.workspaceFolders
+	const rootfolders = vscode.workspace.workspaceFolders as readonly vscode.WorkspaceFolder[]
 	let rootPathFull = ''
 
 	// Support for only one workspace opened or rootPath set in config
@@ -171,20 +174,6 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 
 	let disposable3 = vscode.commands.registerCommand('vscode-gutenberg.selectFiles', async function (){
-		const rootfolders = vscode.workspace.workspaceFolders
-		let rootPathFull = ''
-
-		// Support for only one workspace opened or rootPath set in config
-		if(rootfolders.length === 1 && rootFolderOption === ""){
-			//rootPathUri = rootfolders[0].uri
-			rootPathFull = rootfolders[0].uri.fsPath
-			console.log(`Root path found: ${rootfolders[0].name}`)
-		}
-
-		if(rootFolderOption){
-			rootPathFull = rootFolderOption
-			console.log(`Root path found: ${rootFolderOption}`)
-		}
 
 		const configExists = await fs.pathExists(`${rootPathFull}/.selectedFiles.json`)
 		if(configExists){
@@ -200,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// 	.catch(e => console.error(e));
 		console.log(filesInDir)
 
-		const filesWithoutRootPath = []
+		const filesWithoutRootPath:Array<string> = []
 		filesInDir.forEach(file => {
 			const initialIndex = rootPathFull.length + 1
 			const fileName = path.basename(file)
@@ -209,7 +198,8 @@ export function activate(context: vscode.ExtensionContext) {
 			// if the folderName is an ignore folder, continue to next filePath
 			if(ignoreRootFoldersOption.includes(folderName)){
 				return
-			} else if(!ignoreFilesOption.includes(fileName)){
+			} else if(!ignoreFilesOption.includes(fileName) &&
+					  fileName.includes(inputExtensionOption)){
 				filesWithoutRootPath.push(file.substr(initialIndex))
 			}
 		})
@@ -267,7 +257,6 @@ export function activate(context: vscode.ExtensionContext) {
 				  //console.log(fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses))
 				  saveCheckboxesStatus(rootPathFull, message.checkboxStatuses)
 				  
-				//   //const data = fileCheckboxStatus(filesWithoutRootPath, message.checkboxStatuses)
 				  const data = message.checkboxStatuses
 					printSelectedFiles(
 						rootPathFull, 
@@ -299,10 +288,11 @@ module.exports = {
 	deactivate
 }
 
-async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension){
+async function getBookFiles(
+	rootPath:string, ignoreFolders:Array<string>, ignoreFiles:Array<string>, fileExtension:string){
 
 	let bookFoldersPromise = await Promise.resolve(vscode.workspace.fs.readDirectory( vscode.Uri.file(rootPath)))
-	let bookFoldersPaths = []
+	let bookFoldersPaths:Array<string> = []
 	let bookPaths = await Promise.resolve(bookFoldersPromise)
 	let bookFilesOnRoot:Array<string> = []
 
@@ -317,7 +307,7 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 		}
 	})
 
-	let bookFilesPromises = []
+	let bookFilesPromises:Array<any> = []
 	let bookFilesResponse = []
 	let bookFiles = []
 
@@ -335,8 +325,8 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 			//bookFiles.push(bookFoldersPaths[i], bookFilesResponse[i])
 			const basePath = path.basename(bookFoldersPaths[i])
 			// only add files to tempFiles
-			const tempFiles = []
-			bookFilesResponse[i].forEach(element => {
+			const tempFiles:Array<string> = []
+			bookFilesResponse[i].forEach((element:Array<any>) => {
 				if(element[1] == 1 && element[0].includes(fileExtension) && !ignoreFiles.includes(element[0])){
 					tempFiles.push(element[0])
 				}
@@ -381,8 +371,8 @@ async function getBookFiles(rootPath, ignoreFolders, ignoreFiles, fileExtension)
 }
 
 async function getFiles(dir:string) {
-	const dirents = await readdir(dir, { withFileTypes: true });
-	const files = await Promise.all(dirents.map((dirent) => {
+	const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
+	const files = await Promise.all(dirents.map((dirent:ADirent) => {
 	  const res = resolve(dir, dirent.name);
 	  return dirent.isDirectory() ? getFiles(res) : res;
 	}));
@@ -457,21 +447,10 @@ function search(nameKey:string, data:Array<fileSelected>){
 }
 
 function saveCheckboxesStatus(rootPath:string, data:Array<object>){
-	fs.writeFile(`${rootPath}/.selectedFiles.json`, JSON.stringify(data), (err) => {
+	fs.writeFile(`${rootPath}/.selectedFiles.json`, JSON.stringify(data), (err:Error) => {
 		if (err) throw err;
 		console.log('Data written to file');
 	});
-}
-
-function fileCheckboxStatus(htmlList:Array<string>, statuses:Array<boolean>){
-	let combinedArray = []
-	htmlList.forEach((file, index) => {
-		combinedArray.push({
-			'filePath': file,
-			'checked': statuses[index]
-		})
-	})
-	return combinedArray
 }
 
 function getWebviewContent(checkboxesHtml:string) {

@@ -2,7 +2,7 @@
 	"name": "vscode-gutenberg",
 	"displayName": "Gutenberg",
 	"description": "Print a markdown book to pdf, doc, or html",
-	"version": "1.0.2",
+	"version": "1.1.0",
 	"publisher": "TheFern",
 	"icon": "images/printed.png",
 	"license": "MIT",

@@ -4,9 +4,17 @@
 
 # vscode-gutenberg
 
+![Logo](./images/printed.png)
+
 This extension aims to bridge the gap between technical writers of markup languages such as markdown, and eventually a few other light weight markups extensions. The goal is to take files, and print them into a book pdf, doc, or html.
 
 Most of the existing extensions I've looked at, print a single markdown file, others preview markdown which is great, but none print a book (Unless I missed that extension somehow). This extension is strictly for writers that want to focus on writing markup and print without all the extra hassle.
+
+## New Feature 1.1.0
+
+This release introduces a file selection webview, as shown below. It offers a bit more control, and offers less rigidity when it comes to folder structure. It remembers what you selected previously, saved on a hidden file called `.selectedFiles.json`. 
+
+![File Selection](./images/fileSelection.png)
 
 ## Extension Support
 
@@ -18,13 +26,24 @@ The extension supports anything that pandoc supports as that is what is being us
 
 ## Features
 
-The extension has two commands:
+The extension has three commands:
 - gutenberg: Print Book
 - gutenberg: Print Single
+- gutenberg: Select Files to Print
+
+### Print Book
 
 The workspace will be treated as the root directory, if there are folders in the root directory, and those folders are not in the ignore configuration array they will be treated as chapters. If for whatever reason you don't want the workspace treated as the root directory, you can choose a path of your own in the configuration.
 
 Without taking into consideration ignored folders, if the root path doesn't contain any folders then the extension will look into the  root path for files if they contain the markdown extension.
+
+### Print Single
+
+Prints one single file into the desired output extension.
+
+### Select Files to Print
+
+The workspace will be treated as the root directory, files will be read recursively. Then the files will be shown in a webview for user to select which files to print.
 
 ## Requirements
 
@@ -43,7 +62,7 @@ pandoc someFile.md -o book.html
 
 > NB: The first time you use pandoc, you'll get popups for installing MiKTeX packages, or you can choose in settings to install on the fly without popups. Also the first time you convert a document it takes a while, the next time will be fast as all the packages are already downloaded.
 
-## Book Structure
+## Book Structure (Only needed for Print Book Command)
 
 There are two ways you can structure your book. If you're like me chances are you want some folder structure, keeping in mind, that there should be no nesting within those folders, basically from root folder you can have one nested level of folders or chapters. I thought about gathering files recursively, but that would complicate things a bit with ordering while is certainly doable, I think it isn't worth the trouble for now.
 
@@ -97,12 +116,12 @@ None
 
 No major changes, added pandocCommandExtra to single print to be in par with book print. Added a bit of information regarding mermaid support.
 
-### 1.0.2
+### 1.1.0
 
 Additions:
-- Added examples folder
-- Added pandocCommandExtra to single print
-- Added information on readme about mermaid support
+- Added webview for file selection
+- Previous commands were refactored, but remained the same
+- Non-breaking: Added typescript to project
 
 ## Credits
 
