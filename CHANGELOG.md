@@ -4,7 +4,7 @@ All notable changes to the "vscode-markdown-pandoc" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## 1.1.0
+## 1.1.1
 
 Additions:
 - Added webview for file selection

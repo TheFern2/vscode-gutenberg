@@ -8,7 +8,7 @@
 
 This extension aims to bridge the gap between technical writers of markup languages such as markdown, and eventually a few other light weight markups extensions. The goal is to take files, and print them into a book pdf, doc, or html. This extension is strictly for writers that want to focus on writing markup and print without all the extra hassle.
 
-## New Feature 1.1.0
+## New Feature 1.1.1
 
 This release introduces a file selection webview, as shown below. It offers a bit more control, and offers less rigidity when it comes to folder structure. It remembers what you selected previously, saved on a hidden file called `.selectedFiles.json`. 
 
