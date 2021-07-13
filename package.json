@@ -1,0 +1,122 @@
+{
+	"name": "vscode-gutenberg",
+	"displayName": "Gutenberg",
+	"description": "Print a markdown book to pdf, doc, or html",
+	"version": "1.1.2",
+	"publisher": "TheFern",
+	"icon": "images/printed.png",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/TheFern2/vscode-gutenberg/issues",
+		"email": "fernandobe+git@protonmail.com"
+	},
+	"homepage": "https://github.com/TheFern2/vscode-gutenberg",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/TheFern2/vscode-gutenberg.git"
+	},
+	"keywords": [
+		"markdown",
+		"pandoc",
+		"latex"
+	],
+	"engines": {
+		"vscode": "^1.50.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:vscode-gutenberg.printBook",
+		"onCommand:vscode-gutenberg.printSingle",
+		"onCommand:vscode-gutenberg.selectFiles"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "vscode-gutenberg.printBook",
+				"title": "gutenberg: Print Book"
+			},
+			{
+				"command": "vscode-gutenberg.printSingle",
+				"title": "gutenberg: Print Single"
+			},
+			{
+				"command": "vscode-gutenberg.selectFiles",
+				"title": "gutenberg: Select Files to Print"
+			}
+		],
+		"configuration": {
+			"title": "Gutenberg",
+			"properties": {
+				"gutenberg.pandocCmdArgs": {
+					"type": "object",
+					"default": {
+						"outputFolder": "output",
+						"bookName": "book",
+						"pdfEngine": "xelatex"
+					},
+					"description": "Pandoc cmd line options"
+				},
+				"gutenberg.pandocCommandExtra": {
+					"type": "string",
+					"default": "",
+					"description": "If any extra flags are needed, they go here, i.e. template, toc, etc."
+				},
+				"gutenberg.useDifferentRootPath": {
+					"type": "string",
+					"default": "",
+					"description": "By default gutenberg reads workspace rootPath, if your book is within a folder, specify the path to be used"
+				},
+				"gutenberg.inputExtension": {
+					"type": "string",
+					"default": "md",
+					"description": "Input file extension"
+				},
+				"gutenberg.outputExtension": {
+					"type": "string",
+					"default": "pdf",
+					"description": "Output file extension"
+				},
+				"gutenberg.ignoreRootPathFolders": {
+					"type": "array",
+					"default": [
+						"images",
+						"output"
+					],
+					"description": "Root path folders ignored from the book print"
+				},
+				"gutenberg.ignoreFiles": {
+					"type": "array",
+					"default": [
+						".selectedFiles.json"
+					],
+					"description": "Files to be ignored from the book print"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint src --ext ts",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.3",
+		"@types/mocha": "^8.0.0",
+		"@types/node": "^12.11.7",
+		"@types/vscode": "^1.50.0",
+		"eslint": "^7.9.0",
+		"glob": "^7.1.6",
+		"mocha": "^8.1.3",
+		"typescript": "^4.0.5",
+		"vscode-test": "^1.4.0"
+	},
+	"dependencies": {
+		"fs-extra": "^9.0.1"
+	}
+}
